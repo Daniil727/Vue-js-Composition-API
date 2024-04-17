@@ -13,17 +13,27 @@
       </div>
     </div>
 
-    <div v-for="i in 3" :key="i" class="card mb-5">
+    <div v-for="list in lists" :key="list.id" class="card mb-5">
       <div class="card-content">
         <div class="content">
           <div class="columns is-mobile is-vcentered">
             <div class="column is-left">
-              Lorem ipsum leo Lorem ipsum dolor sit amet consectetur adipisicing
-              elit. 
+              <div class="lineBreaks">
+                <div>&#8470;{{ list.number }}</div>
+                <div class="mt-2">
+                  {{ list.content }}
+                </div>
+              </div>
             </div>
-            <div class="column is-4 is-text-right ">
-              <button class="button is-black">&#128504;</button>
-              <button class="button is-danger ml-2">&#9932;</button>
+            <div class="column is-2 is-text-right">
+              <div class="lineBreaksBtn">
+                <div>
+                  <button class="button is-black">&#10004;</button>
+                </div>
+                <div>
+                  <button class="button is-danger mt-2">&#9932;</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -32,17 +42,58 @@
   </div>
 </template>
 
-<script></script>
+<script setup>
+import { ref } from "vue";
+
+const lists = ref([
+  {
+    id: "id1",
+    number: "1",
+    content: "lorem",
+    done: true,
+  },
+  {
+    id: "id2",
+    number: "2",
+    content: "content2",
+    done: true,
+  },
+  {
+    id: "id3",
+    number: "3",
+    content: "content3",
+    done: true,
+  },
+  {
+    id: "id4",
+    number: "4",
+    content: "content4",
+    done: true,
+  },
+]);
+</script>
 
 <style>
 @import "bulma/css/bulma.min.css";
 
 .notes {
   margin: 0 auto;
-  max-width: 500px;
+  max-width: 900px;
   padding: 10px;
 }
+
 .titleOfNotes {
   padding: 10px;
+}
+
+.lineBreaks {
+  display: flex;
+  flex-direction: column;
+}
+
+.lineBreaksBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 </style>
