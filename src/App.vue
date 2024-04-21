@@ -50,10 +50,12 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
-import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, query, orderBy, limit } from "firebase/firestore";
 import { db } from "@/firebase";
 
-const listsCollectionRef = collection(db, "lists")
+const listsCollectionRef = collection(db, "lists");
+// сортировка по дате 
+const listsCollectionQuery = query(listsCollectionRef, orderBy("date", "desc"), limit(10));
 
 const lists = ref([
 ]);
@@ -61,7 +63,7 @@ const lists = ref([
 // добавляем данные из firebase
 
 onMounted(() => {
-  onSnapshot(listsCollectionRef, (querySnapshot) => {
+  onSnapshot(listsCollectionQuery, (querySnapshot) => {
     const firebaselists = [];
     querySnapshot.forEach((doc) => {
       const list = {
@@ -81,6 +83,7 @@ const addNotes = () => {
   addDoc(listsCollectionRef, {
     content: newNotesCont.value,
     done: false,
+    date: Date.now(),
   });
   newNotesCont.value = "";
 };
