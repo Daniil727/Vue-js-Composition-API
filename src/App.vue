@@ -7,13 +7,8 @@
     <form name="form" action="#" class="mb-5" @submit.prevent="addNotes">
       <div class="field has-addons-centered has-addons">
         <div class="control">
-          <input
-            name="input"
-            v-model="newNotesCont"
-            class="input has-background-dark"
-            type="text"
-            placeholder="Find a repository"
-          />
+          <input name="input" v-model="newNotesCont" class="input has-background-dark" type="text"
+            placeholder="Find a repository" />
         </div>
         <div class="control">
           <button :disabled="!newNotesCont" class="button is-info">
@@ -23,37 +18,24 @@
       </div>
     </form>
 
-    <div
-      v-for="list in lists"
-      :key="list.id"
-      class="card mb-5 has-background-dark animationCard"
-      :class="{ 'has-background-info-dark': list.done }"
-    >
+    <div v-for="list in lists" :key="list.id" class="card mb-5 has-background-dark animationCard"
+      :class="{ 'has-background-info-dark': list.done }">
       <div class="card-content">
         <div class="content">
           <div class="columns is-mobile is-vcentered">
-            <div
-              class="column is-left"
-              :class="{ 'has-text-success-light line-through': list.done }"
-            >
+            <div class="column is-left" :class="{ 'has-text-success-light line-through': list.done }">
               {{ list.content }}
             </div>
             <div class="column is-2 is-text-right">
               <div class="lineBreaksBtn">
                 <div>
-                  <button
-                    @click="toggleDone(list.id)"
-                    class="button is-info"
-                    :class="list.done ? 'is-info' : 'is-dark'"
-                  >
+                  <button @click="toggleDone(list.id)" class="button is-info"
+                    :class="list.done ? 'is-info' : 'is-dark'">
                     &#10004;
                   </button>
                 </div>
                 <div>
-                  <button
-                    @click="deleteNotes(list.id)"
-                    class="button is-danger mt-2"
-                  >
+                  <button @click="deleteNotes(list.id)" class="button is-danger mt-2">
                     &#9932;
                   </button>
                 </div>
@@ -67,54 +49,61 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import { v4 as uuidv4 } from "uuid";
+import { ref, onMounted } from "vue";
+import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore";
+import { db } from "@/firebase";
+
+const listsCollectionRef = collection(db, "lists")
 
 const lists = ref([
-  // {
-  //   id: "id1",
-  //   content: "lorem",
-  //   done: true,
-  // },
-  // {
-  //   id: "id2",
-  //   content: "content2",
-  //   done: false,
-  // },
-  // {
-  //   id: "id3",
-  //   content: "content3",
-  //   done: true,
-  // },
-  // {
-  //   id: "id4",
-  //   content: "content4",
-  //   done: true,
-  // },
 ]);
 
+// добавляем данные из firebase
+
+onMounted(() => {
+  onSnapshot(listsCollectionRef, (querySnapshot) => {
+    const firebaselists = [];
+    querySnapshot.forEach((doc) => {
+      const list = {
+        id: doc.id,
+        content: doc.data().content,
+        done: doc.data().done,
+      };
+      firebaselists.push(list);
+    });
+    lists.value = firebaselists
+  });
+})
+
+// добавляем данные в firebase
+
 const addNotes = () => {
-  const newNotes = {
-    id: uuidv4(),
+  addDoc(listsCollectionRef, {
     content: newNotesCont.value,
-    done: true,
-  };
-  lists.value.unshift(newNotes);
+    done: false,
+  });
   newNotesCont.value = "";
 };
 
 const newNotesCont = ref("");
 
+//удаление 
+
 const deleteNotes = (id) => {
-  lists.value = lists.value.filter((list) => list.id !== id);
+  deleteDoc(doc(listsCollectionRef, id));
   console.log("id:", id);
 };
 
+//отметка о выполнении 
+
 const toggleDone = (id) => {
   const index = lists.value.findIndex((list) => list.id === id);
-  lists.value[index].done = !lists.value[index].done;
-  console.log("toggleDone:", id);
-  console.log("index:", index);
+
+  // тоблер динамического переключения true/false
+
+  updateDoc(doc(listsCollectionRef, id), {
+    done: !lists.value[index].done
+  });
 };
 </script>
 
@@ -136,17 +125,18 @@ const toggleDone = (id) => {
   flex-direction: column;
   align-items: center;
 }
+
 .line-through {
   text-decoration: line-through;
 }
+
 .animationTitleOfNotes {
   -webkit-animation: text-focus-in 1s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
   animation: text-focus-in 1s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
 }
 
 .animationCard {
-  -webkit-animation: slide-in-blurred-top 0.6s cubic-bezier(0.23, 1, 0.32, 1)
-    both;
+  -webkit-animation: slide-in-blurred-top 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
   animation: slide-in-blurred-top 0.6s cubic-bezier(0.23, 1, 0.32, 1) both;
 }
 
@@ -156,18 +146,21 @@ const toggleDone = (id) => {
     filter: blur(12px);
     opacity: 0;
   }
+
   100% {
     -webkit-filter: blur(0px);
     filter: blur(0px);
     opacity: 1;
   }
 }
+
 @keyframes text-focus-in {
   0% {
     -webkit-filter: blur(12px);
     filter: blur(12px);
     opacity: 0;
   }
+
   100% {
     -webkit-filter: blur(0px);
     filter: blur(0px);
@@ -185,6 +178,7 @@ const toggleDone = (id) => {
     filter: blur(40px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateY(0) scaleY(1) scaleX(1);
     transform: translateY(0) scaleY(1) scaleX(1);
@@ -195,6 +189,7 @@ const toggleDone = (id) => {
     opacity: 1;
   }
 }
+
 @keyframes slide-in-blurred-top {
   0% {
     -webkit-transform: translateY(-1000px) scaleY(2.5) scaleX(0.2);
@@ -205,6 +200,7 @@ const toggleDone = (id) => {
     filter: blur(40px);
     opacity: 0;
   }
+
   100% {
     -webkit-transform: translateY(0) scaleY(1) scaleX(1);
     transform: translateY(0) scaleY(1) scaleX(1);
